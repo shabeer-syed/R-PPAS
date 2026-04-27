@@ -75,13 +75,24 @@
         .tier-display {
             font-size: 18px;
             font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .ppv-display {
+            font-size: 16px;
+            font-weight: bold;
+            color: #555;
             margin-bottom: 10px;
+            padding: 5px;
+            background: rgba(255,255,255,0.5);
+            border-radius: 4px;
+            display: inline-block;
         }
         .warning-text {
             font-size: 14px;
             color: #c0392b;
             font-weight: bold;
             display: none;
+            margin-top: 10px;
         }
         .high-risk {
             background: #fdf3f2;
@@ -127,7 +138,8 @@
 
     <div id="results" class="results-box">
         <div class="score-display">Total Score: <span id="total-score">0</span></div>
-        <div id="tier-display" class="tier-display" style="color: #27ae60;">Low Risk (PPV=10.4%)</div>
+        <div id="tier-display" class="tier-display" style="color: #27ae60;">Low Risk</div>
+        <div id="ppv-display" class="ppv-display">Validation PPV = 10.4%</div>
         <div id="warning-text" class="warning-text">Optimal Clinical Threshold Exceeded (≥4). Initiate proactive discharge planning.</div>
     </div>
 </div>
@@ -136,6 +148,7 @@
     const form = document.getElementById('rppas-form');
     const scoreDisplay = document.getElementById('total-score');
     const tierDisplay = document.getElementById('tier-display');
+    const ppvDisplay = document.getElementById('ppv-display');
     const warningText = document.getElementById('warning-text');
     const resultsBox = document.getElementById('results');
 
@@ -160,19 +173,32 @@
         // Update score display (round to 1 decimal place if needed)
         scoreDisplay.textContent = Number.isInteger(total) ? total : total.toFixed(1);
 
-        // Update Stratification
+        // Update Specific PPV Thresholds based on Validation Cohort Data
+        let ppvText = "";
+        if (total >= 7) { ppvText = "46.3%"; }
+        else if (total >= 6) { ppvText = "40.8%"; }
+        else if (total >= 5) { ppvText = "36.2%"; }
+        else if (total >= 4) { ppvText = "30.8%"; }
+        else if (total >= 3) { ppvText = "26.6%"; }
+        else if (total >= 2) { ppvText = "23.8%"; }
+        else if (total >= 1) { ppvText = "21.6%"; }
+        else { ppvText = "10.4%"; }
+
+        ppvDisplay.textContent = "Validation PPV = " + ppvText;
+
+        // Update Stratification Tiers
         if (total <= 3) {
-            tierDisplay.textContent = "Low Risk (Validation PPV=10.4%)";
+            tierDisplay.textContent = "Low Risk Tier";
             tierDisplay.style.color = "#27ae60"; // Green
             resultsBox.className = "results-box";
             warningText.style.display = "none";
         } else if (total <= 5) {
-            tierDisplay.textContent = "Moderate Risk (Validation PPV=26.2%)";
+            tierDisplay.textContent = "Moderate Risk Tier";
             tierDisplay.style.color = "#d35400"; // Orange
             resultsBox.className = "results-box high-risk";
             warningText.style.display = "block";
         } else {
-            tierDisplay.textContent = "High Risk (Validation PPV=40.8%)";
+            tierDisplay.textContent = "High Risk Tier";
             tierDisplay.style.color = "#c0392b"; // Red
             resultsBox.className = "results-box high-risk";
             warningText.style.display = "block";
