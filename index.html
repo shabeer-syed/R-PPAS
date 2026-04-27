@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>R-PPAS Clinical Calculator</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        .calculator-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            font-size: 24px;
+            color: #2c3e50;
+            text-align: center;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 15px;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #34495e;
+            margin-top: 25px;
+            margin-bottom: 10px;
+        }
+        .option-group {
+            margin-bottom: 10px;
+        }
+        label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        label:hover {
+            background: #f0f4f8;
+        }
+        input[type="radio"], input[type="checkbox"] {
+            margin-right: 12px;
+            transform: scale(1.2);
+        }
+        .points {
+            margin-left: auto;
+            font-weight: bold;
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+        .results-box {
+            margin-top: 30px;
+            padding: 20px;
+            background: #e8f4fd;
+            border-left: 5px solid #3498db;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .score-display {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2980b9;
+            margin-bottom: 5px;
+        }
+        .tier-display {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .warning-text {
+            font-size: 14px;
+            color: #c0392b;
+            font-weight: bold;
+            display: none;
+        }
+        .high-risk {
+            background: #fdf3f2;
+            border-left-color: #e74c3c;
+        }
+        .high-risk .score-display { color: #c0392b; }
+    </style>
+</head>
+<body>
+
+<div class="calculator-container">
+    <h1>Risk of Prolonged Psychiatric Admission Score (R-PPAS)</h1>
+    <p style="font-size: 14px; color: #666; text-align: center;">Calculate the risk of a prolonged admission (>59 days) for adult acute psychiatric patients.</p>
+
+    <form id="rppas-form">
+        <div class="section-title">1. Primary Diagnosis (Select One)</div>
+        <div class="option-group">
+            <label><input type="radio" name="diagnosis" value="2"> Paranoid schizophrenia <span class="points">+2.0</span></label>
+            <label><input type="radio" name="diagnosis" value="2"> Schizoaffective disorder <span class="points">+2.0</span></label>
+            <label><input type="radio" name="diagnosis" value="2"> Bipolar disorder <span class="points">+2.0</span></label>
+            <label><input type="radio" name="diagnosis" value="1.5"> Severe depression <span class="points">+1.5</span></label>
+            <label><input type="radio" name="diagnosis" value="1"> Other psychosis <span class="points">+1.0</span></label>
+            <label><input type="radio" name="diagnosis" value="0" checked> None of the above <span class="points">0</span></label>
+        </div>
+
+        <div class="section-title">2. Social & Care Factors</div>
+        <div class="option-group">
+            <label><input type="checkbox" class="risk-factor" value="1"> Homelessness <span class="points">+1.0</span></label>
+            <label><input type="checkbox" class="risk-factor" value="1"> Delayed care coordinator allocation (>2 weeks) <span class="points">+1.0</span></label>
+        </div>
+
+        <div class="section-title">3. Risk Concerns</div>
+        <div class="option-group">
+            <label><input type="checkbox" class="risk-factor" value="1"> Self-neglect <span class="points">+1.0</span></label>
+            <label><input type="checkbox" class="risk-factor" value="1"> Non-compliance / care disengagement <span class="points">+1.0</span></label>
+            <label><input type="checkbox" class="risk-factor" value="1"> Aggression and violence <span class="points">+1.0</span></label>
+            <label><input type="checkbox" class="risk-factor" value="1"> Falls risk <span class="points">+1.0</span></label>
+            <label><input type="checkbox" class="risk-factor" value="-0.5"> Drug or alcohol misuse <span class="points">-0.5</span></label>
+            <label><input type="checkbox" class="risk-factor" value="-0.5"> Self-harm <span class="points">-0.5</span></label>
+            <label><input type="checkbox" class="risk-factor" value="-0.5"> Accidental harm (outside the home) <span class="points">-0.5</span></label>
+        </div>
+    </form>
+
+    <div id="results" class="results-box">
+        <div class="score-display">Total Score: <span id="total-score">0</span></div>
+        <div id="tier-display" class="tier-display" style="color: #27ae60;">Low Risk (PPV=10.4%)</div>
+        <div id="warning-text" class="warning-text">Optimal Clinical Threshold Exceeded (≥4). Initiate proactive discharge planning.</div>
+    </div>
+</div>
+
+<script>
+    const form = document.getElementById('rppas-form');
+    const scoreDisplay = document.getElementById('total-score');
+    const tierDisplay = document.getElementById('tier-display');
+    const warningText = document.getElementById('warning-text');
+    const resultsBox = document.getElementById('results');
+
+    function calculateScore() {
+        let total = 0;
+
+        // Get radio value (Diagnosis)
+        const diagInput = document.querySelector('input[name="diagnosis"]:checked');
+        if (diagInput) {
+            total += parseFloat(diagInput.value);
+        }
+
+        // Get checkbox values
+        const checkboxes = document.querySelectorAll('.risk-factor:checked');
+        checkboxes.forEach((cb) => {
+            total += parseFloat(cb.value);
+        });
+
+        // Cap score between 0 and 7
+        total = Math.max(0, Math.min(7, total));
+        
+        // Update score display (round to 1 decimal place if needed)
+        scoreDisplay.textContent = Number.isInteger(total) ? total : total.toFixed(1);
+
+        // Update Stratification
+        if (total <= 3) {
+            tierDisplay.textContent = "Low Risk (Validation PPV=10.4%)";
+            tierDisplay.style.color = "#27ae60"; // Green
+            resultsBox.className = "results-box";
+            warningText.style.display = "none";
+        } else if (total <= 5) {
+            tierDisplay.textContent = "Moderate Risk (Validation PPV=26.2%)";
+            tierDisplay.style.color = "#d35400"; // Orange
+            resultsBox.className = "results-box high-risk";
+            warningText.style.display = "block";
+        } else {
+            tierDisplay.textContent = "High Risk (Validation PPV=40.8%)";
+            tierDisplay.style.color = "#c0392b"; // Red
+            resultsBox.className = "results-box high-risk";
+            warningText.style.display = "block";
+        }
+    }
+
+    // Add event listeners to all inputs to calculate instantly when clicked
+    form.addEventListener('change', calculateScore);
+</script>
+
+</body>
+</html>
