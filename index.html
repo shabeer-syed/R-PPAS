@@ -20,12 +20,61 @@
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
+
+        /* ---- Header with action buttons ---- */
+        .page-header {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+        .header-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            padding: 7px 14px;
+            border-radius: 4px;
+            border: 1px solid #d3dbe0;
+            background: #fff;
+            color: #2c3e50;
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .header-btn:hover {
+            background: #eef4f8;
+            border-color: #3498db;
+        }
+        .header-btn:focus-visible {
+            outline: 3px solid #3498db;
+            outline-offset: 2px;
+        }
+        .header-btn.is-pending {
+            color: #8a949b;
+            border-style: dashed;
+            cursor: default;
+            background: #fafbfc;
+        }
+        .header-btn.is-pending:hover {
+            background: #fafbfc;
+            border-color: #d3dbe0;
+        }
+
         h1 {
             font-size: 24px;
             color: #2c3e50;
             text-align: center;
             border-bottom: 2px solid #eee;
             padding-bottom: 15px;
+            margin-top: 0;
+        }
+        .intro {
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+            margin-top: 0;
         }
         .section-title {
             font-size: 18px;
@@ -51,6 +100,10 @@
         input[type="radio"], input[type="checkbox"] {
             margin-right: 12px;
             transform: scale(1.2);
+        }
+        input[type="radio"]:focus-visible, input[type="checkbox"]:focus-visible {
+            outline: 3px solid #3498db;
+            outline-offset: 2px;
         }
         .points {
             margin-left: auto;
@@ -78,37 +131,81 @@
             margin-bottom: 5px;
         }
         .ppv-display {
-            font-size: 16px;
-            font-weight: bold;
+            font-size: 15px;
             color: #555;
             margin-bottom: 10px;
-            padding: 5px;
-            background: rgba(255,255,255,0.5);
+            padding: 5px 10px;
+            background: rgba(255,255,255,0.6);
             border-radius: 4px;
             display: inline-block;
         }
-        .warning-text {
+        .action-text {
             font-size: 14px;
-            color: #c0392b;
-            font-weight: bold;
-            display: none;
+            color: #34495e;
             margin-top: 10px;
         }
-        .high-risk {
+        .action-text.is-flagged {
+            color: #c0392b;
+            font-weight: bold;
+        }
+        .above-threshold {
             background: #fdf3f2;
             border-left-color: #e74c3c;
         }
-        .high-risk .score-display { color: #c0392b; }
+        .above-threshold .score-display { color: #c0392b; }
+
+        .reset-row {
+            text-align: center;
+            margin-top: 15px;
+        }
+        .reset-btn {
+            font-size: 13px;
+            font-family: inherit;
+            color: #5a6b76;
+            background: none;
+            border: none;
+            border-bottom: 1px solid #c8d2d8;
+            padding: 2px 0;
+            cursor: pointer;
+        }
+        .reset-btn:hover { color: #2c3e50; border-bottom-color: #2c3e50; }
+        .reset-btn:focus-visible { outline: 3px solid #3498db; outline-offset: 2px; }
+
+        .page-footer {
+            max-width: 600px;
+            margin: 20px auto 0;
+            font-size: 12px;
+            color: #6b757c;
+            line-height: 1.5;
+        }
+        .page-footer p { margin: 0 0 8px; }
+        .page-footer a { color: #2980b9; }
+
+        @media (prefers-reduced-motion: reduce) {
+            * { transition: none !important; }
+        }
     </style>
 </head>
 <body>
 
+<!--
+  TO PUBLISH THE PAPER LINK: set PAPER_URL in the script below to the article DOI or URL.
+  While it is empty, the button renders as a non-clickable "Paper — in press" chip.
+-->
+
+<div class="page-header">
+    <a id="paper-btn" class="header-btn" href="#">Read the paper</a>
+    <a class="header-btn"
+       href="The%20Risk%20of%20Prolonged%20Psychiatric%20Admission%20Score%20Checklist.pdf"
+       download>Download checklist (PDF)</a>
+</div>
+
 <div class="calculator-container">
     <h1>Risk of Prolonged Psychiatric Admission Score (R-PPAS)</h1>
-    <p style="font-size: 14px; color: #666; text-align: center;">Calculate the risk of a prolonged admission (>59 days) for adult acute psychiatric patients.</p>
+    <p class="intro">Estimates the risk of a prolonged admission (longer than 59 days) for adults in acute psychiatric care, so that discharge planning can begin earlier.</p>
 
     <form id="rppas-form">
-        <div class="section-title">1. Primary Diagnosis (Select One)</div>
+        <div class="section-title">1. Primary diagnosis (select one)</div>
         <div class="option-group">
             <label><input type="radio" name="diagnosis" value="2"> Paranoid schizophrenia <span class="points">+2.0</span></label>
             <label><input type="radio" name="diagnosis" value="2"> Schizoaffective disorder <span class="points">+2.0</span></label>
@@ -118,95 +215,114 @@
             <label><input type="radio" name="diagnosis" value="0" checked> None of the above <span class="points">0</span></label>
         </div>
 
-        <div class="section-title">2. Social & Care Factors</div>
+        <div class="section-title">2. Social and care factors (check all that apply)</div>
         <div class="option-group">
             <label><input type="checkbox" class="risk-factor" value="1"> Homelessness <span class="points">+1.0</span></label>
-            <label><input type="checkbox" class="risk-factor" value="1"> Delayed care coordinator allocation (>2 weeks) <span class="points">+1.0</span></label>
+            <label><input type="checkbox" class="risk-factor" value="1"> Delayed care coordinator allocation (&gt;2 weeks) <span class="points">+1.0</span></label>
         </div>
 
-        <div class="section-title">3. Risk Concerns</div>
+        <div class="section-title">3. Risk concerns (check all that apply)</div>
         <div class="option-group">
             <label><input type="checkbox" class="risk-factor" value="1"> Self-neglect <span class="points">+1.0</span></label>
             <label><input type="checkbox" class="risk-factor" value="1"> Non-compliance / care disengagement <span class="points">+1.0</span></label>
             <label><input type="checkbox" class="risk-factor" value="1"> Aggression and violence <span class="points">+1.0</span></label>
             <label><input type="checkbox" class="risk-factor" value="1"> Falls risk <span class="points">+1.0</span></label>
-            <label><input type="checkbox" class="risk-factor" value="-0.5"> Drug or alcohol misuse <span class="points">-0.5</span></label>
-            <label><input type="checkbox" class="risk-factor" value="-0.5"> Self-harm <span class="points">-0.5</span></label>
-            <label><input type="checkbox" class="risk-factor" value="-0.5"> Accidental harm (outside the home) <span class="points">-0.5</span></label>
+            <label><input type="checkbox" class="risk-factor" value="-0.5"> Drug or alcohol misuse <span class="points">−0.5</span></label>
+            <label><input type="checkbox" class="risk-factor" value="-0.5"> Self-harm <span class="points">−0.5</span></label>
+            <label><input type="checkbox" class="risk-factor" value="-0.5"> Accidental harm (outside the home) <span class="points">−0.5</span></label>
         </div>
     </form>
 
-    <div id="results" class="results-box">
-        <div class="score-display">Total Score: <span id="total-score">0</span></div>
-        <div id="tier-display" class="tier-display" style="color: #27ae60;">Low Risk</div>
-        <div id="ppv-display" class="ppv-display">Validation PPV = 10.4%</div>
-        <div id="warning-text" class="warning-text">Optimal Clinical Threshold Exceeded (≥4). Initiate proactive discharge planning.</div>
+    <div id="results" class="results-box" role="status" aria-live="polite">
+        <div class="score-display">Total score: <span id="total-score">0</span></div>
+        <div id="tier-display" class="tier-display">Low risk</div>
+        <div id="ppv-display" class="ppv-display"></div>
+        <div id="action-text" class="action-text"></div>
+    </div>
+
+    <div class="reset-row">
+        <button type="button" id="reset-btn" class="reset-btn">Clear all and start again</button>
     </div>
 </div>
 
+<div class="page-footer">
+    <p><strong>How to read the score.</strong> Totals are compared directly against each threshold without rounding: a total of 2.5 falls below the cut-off of 3. Totals are capped at a minimum of 0 and a maximum of 7. Percentages are the observed proportion of admissions in each band that lasted longer than 59 days in the external validation cohort.</p>
+    <p><strong>What the score does not tell you.</strong> The R-PPAS identifies admissions likely to be prolonged. It does not indicate that a longer stay is clinically inappropriate, and a substantial proportion of patients will need more than 59 days. It supports clinical judgement about when to start planning; it does not assess readiness for discharge.</p>
+    <p id="citation-line">Syed S, Bird A, Sage C, Bale R, Salkovskis P. Development and validation of the Risk of Prolonged Psychiatric Admission Score (R-PPAS) among adults in England: a population-based cohort study. <em>Social Psychiatry and Psychiatric Epidemiology</em>. Full methods, performance and validation data are reported in that paper.</p>
+</div>
+
 <script>
+    // ---- Set this to the DOI or article URL once the paper is published ----
+    const PAPER_URL = "";
+
     const form = document.getElementById('rppas-form');
     const scoreDisplay = document.getElementById('total-score');
     const tierDisplay = document.getElementById('tier-display');
     const ppvDisplay = document.getElementById('ppv-display');
-    const warningText = document.getElementById('warning-text');
+    const actionText = document.getElementById('action-text');
     const resultsBox = document.getElementById('results');
+    const resetBtn = document.getElementById('reset-btn');
+    const paperBtn = document.getElementById('paper-btn');
+
+    // Observed probability of a prolonged admission in the validation cohort,
+    // by risk band (Table 3): 0-2 = 9.6%, 3-4 = 26.4%, >=5 = 41.7%.
+    const BANDS = [
+        { max: 3,        name: "Low risk (0–2)",      ppv: "9.6%",  colour: "#27ae60", flagged: false,
+          action: "Standard admission pathway." },
+        { max: 5,        name: "Moderate risk (3–4)", ppv: "26.4%", colour: "#d35400", flagged: true,
+          action: "Clinical cut-off of ≥3 exceeded. Start proactive discharge planning." },
+        { max: Infinity, name: "High risk (≥5)",      ppv: "41.7%", colour: "#c0392b", flagged: true,
+          action: "High priority for early resource allocation and intensive community transition planning." }
+    ];
 
     function calculateScore() {
         let total = 0;
 
-        // Get radio value (Diagnosis)
         const diagInput = document.querySelector('input[name="diagnosis"]:checked');
         if (diagInput) {
             total += parseFloat(diagInput.value);
         }
 
-        // Get checkbox values
-        const checkboxes = document.querySelectorAll('.risk-factor:checked');
-        checkboxes.forEach((cb) => {
+        document.querySelectorAll('.risk-factor:checked').forEach((cb) => {
             total += parseFloat(cb.value);
         });
 
-        // Cap score between 0 and 7
+        // Cap between 0 and 7. No rounding: totals are compared as they are.
         total = Math.max(0, Math.min(7, total));
-        
-        // Update score display (round to 1 decimal place if needed)
+
         scoreDisplay.textContent = Number.isInteger(total) ? total : total.toFixed(1);
 
-        // Update Specific PPV Thresholds based on Validation Cohort Data
-        let ppvText = "";
-        if (total >= 7) { ppvText = "46.3%"; }
-        else if (total >= 6) { ppvText = "40.8%"; }
-        else if (total >= 5) { ppvText = "36.2%"; }
-        else if (total >= 4) { ppvText = "30.8%"; }
-        else if (total >= 3) { ppvText = "26.6%"; }
-        else if (total >= 2) { ppvText = "23.8%"; }
-        else if (total >= 1) { ppvText = "21.6%"; }
-        else { ppvText = "10.4%"; }
+        const band = BANDS.find(b => total < b.max);
 
-        ppvDisplay.textContent = "Validation PPV = " + ppvText;
+        tierDisplay.textContent = band.name;
+        tierDisplay.style.color = band.colour;
+        ppvDisplay.textContent = band.ppv + " of admissions in this band exceeded 59 days";
+        actionText.textContent = band.action;
+        actionText.className = band.flagged ? "action-text is-flagged" : "action-text";
+        resultsBox.className = band.flagged ? "results-box above-threshold" : "results-box";
+    }
 
-        // Update Stratification Tiers
-        if (total <= 3) {
-            tierDisplay.textContent = "Low Risk Tier";
-            tierDisplay.style.color = "#27ae60"; // Green
-            resultsBox.className = "results-box";
-            warningText.style.display = "none";
-        } else if (total <= 5) {
-            tierDisplay.textContent = "Moderate Risk Tier";
-            tierDisplay.style.color = "#d35400"; // Orange
-            resultsBox.className = "results-box high-risk";
-            warningText.style.display = "block";
+    function setUpPaperButton() {
+        if (PAPER_URL) {
+            paperBtn.href = PAPER_URL;
+            paperBtn.target = "_blank";
+            paperBtn.rel = "noopener";
+            paperBtn.textContent = "Read the paper";
         } else {
-            tierDisplay.textContent = "High Risk Tier";
-            tierDisplay.style.color = "#c0392b"; // Red
-            resultsBox.className = "results-box high-risk";
-            warningText.style.display = "block";
+            paperBtn.removeAttribute('href');
+            paperBtn.classList.add('is-pending');
+            paperBtn.textContent = "Paper — in press";
         }
     }
 
-    // Add event listeners to all inputs to calculate instantly when clicked
     form.addEventListener('change', calculateScore);
+    resetBtn.addEventListener('click', () => {
+        form.reset();
+        calculateScore();
+    });
+
+    setUpPaperButton();
+    calculateScore();
 </script>
 
 </body>
